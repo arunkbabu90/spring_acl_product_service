@@ -8,8 +8,9 @@ const val GUEST = "GUEST"
 
 const val READ = "READ"
 const val WRITE = "WRITE"
+const val CREATE = "CREATE"
 const val DELETE = "DELETE"
-const val ADMINISTRATION = "ADMINISTRATION"
+const val ADMINISTRATION = "ADMIN"
 
 class Role {
     companion object {

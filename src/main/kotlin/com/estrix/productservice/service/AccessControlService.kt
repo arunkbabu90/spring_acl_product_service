@@ -1,14 +1,13 @@
 package com.estrix.productservice.service
 
 import com.estrix.productservice.domain.Product
+import com.estrix.productservice.dto.PermissionRequest
 import com.estrix.productservice.exception.ResourceNotFoundException
 import com.estrix.productservice.repository.ProductRepository
-import com.estrix.productservice.utils.ADMINISTRATION
-import com.estrix.productservice.utils.DELETE
-import com.estrix.productservice.utils.READ
-import com.estrix.productservice.utils.WRITE
+import com.estrix.productservice.utils.*
 import org.springframework.security.acls.AclPermissionEvaluator
 import org.springframework.security.acls.domain.BasePermission
+import org.springframework.security.acls.domain.GrantedAuthoritySid
 import org.springframework.security.acls.domain.ObjectIdentityImpl
 import org.springframework.security.acls.domain.PrincipalSid
 import org.springframework.security.acls.jdbc.JdbcMutableAclService
@@ -48,31 +47,27 @@ class AccessControlServiceImpl(
     }
 
     @Transactional
-    override fun addPermissionForUser(
-        domainObjectId: Long,
-        className: String,
-        username: String,
-        permission: String
-    ) {
-        val domainObject = Class.forName(className).getDeclaredConstructor().newInstance() as Product
+    override fun addUserOrRole(permissionRequest: PermissionRequest) {
+        permissionRequest.run {
+            val domainObject = Class.forName(className).getDeclaredConstructor().newInstance() as Product
+            val basePermission = permissionToBasePermission(permission)
+            val objectIdentity: ObjectIdentity = ObjectIdentityImpl(domainObject.javaClass, domainObjectId)
 
-        val basePermission = when(permission.uppercase()) {
-            READ -> BasePermission.READ
-            WRITE -> BasePermission.WRITE
-            else -> throw IllegalArgumentException("Invalid permission: $permission")
-        } as BasePermission
+            val acl: MutableAcl = try {
+                aclService.readAclById(objectIdentity) as MutableAcl
+            } catch (e: NotFoundException) {
+                aclService.createAcl(objectIdentity)
+            }
 
-        val objectIdentity: ObjectIdentity = ObjectIdentityImpl(domainObject.javaClass, domainObjectId)
+            val sid: Sid = if (isRole) {
+                GrantedAuthoritySid(sid)
+            } else {
+                PrincipalSid(sid)
+            }
 
-        val acl: MutableAcl = try {
-            aclService.readAclById(objectIdentity) as MutableAcl
-        } catch (e: NotFoundException) {
-            aclService.createAcl(objectIdentity)
+            acl.insertAce(acl.entries.size, basePermission, sid, true)
+            aclService.updateAcl(acl)
         }
-
-        val sid: Sid = PrincipalSid(username)
-        acl.insertAce(acl.entries.size, basePermission, sid, true)
-        aclService.updateAcl(acl)
     }
 
     @Transactional
@@ -146,6 +141,7 @@ class AccessControlServiceImpl(
         when (permission.uppercase()) {
             READ -> BasePermission.READ
             WRITE -> BasePermission.WRITE
+            CREATE -> BasePermission.CREATE
             DELETE -> BasePermission.DELETE
             ADMINISTRATION -> BasePermission.ADMINISTRATION
             else -> throw IllegalArgumentException("Invalid permission: $permission")
@@ -154,7 +150,7 @@ class AccessControlServiceImpl(
 
 interface AccessControlService {
     fun addPermissionForObject(domainObject: Any, permission: Permission) { }
-    fun addPermissionForUser(domainObjectId: Long, className: String, username: String, permission: String) { }
+    fun addUserOrRole(permissionRequest: PermissionRequest) { }
     fun deletePermissionForUser(domainObjectId: Long, className: String, username: String, permission: String)
     fun revokePermission(productId: String, username: String, permission: String): Any? { return null }
     fun hasPermission(product: Product, permission: String) = false
