@@ -7,7 +7,7 @@ import org.mapstruct.Mapper
 import org.mapstruct.factory.Mappers
 
 @Mapper
-interface ProductMapper {
+interface   ProductMapper {
     companion object {
         val INSTANCE: ProductMapper = Mappers.getMapper(ProductMapper::class.java)
     }

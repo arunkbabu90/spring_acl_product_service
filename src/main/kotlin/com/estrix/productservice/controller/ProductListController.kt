@@ -89,6 +89,6 @@ class ProductListControllerImpl(private val productListService: ProductListServi
 
 interface ProductListController {
     fun getProductList(pageNo: Int) = listOf<ProductDto>()
-    fun addProduct(addProductDto: AddProductDto): ResponseEntity<Any>
-    fun editProduct(updatedProductDto: ProductDto): ResponseEntity<Any>
+    fun addProduct(addProductDto: AddProductDto): ResponseEntity<Any> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
+    fun editProduct(updatedProductDto: ProductDto): ResponseEntity<Any> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 }

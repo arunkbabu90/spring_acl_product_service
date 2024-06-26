@@ -12,11 +12,9 @@ const val CREATE = "CREATE"
 const val DELETE = "DELETE"
 const val ADMINISTRATION = "ADMIN"
 
-class Role {
-    companion object {
-        const val ADMIN = "ROLE_ADMIN"
-        const val SELLER = "ROLE_SELLER"
-        const val USER = "ROLE_USER"
-        const val GUEST = "ROLE_GUEST"
-    }
+object Role {
+    const val ADMIN = "ROLE_ADMIN"
+    const val SELLER = "ROLE_SELLER"
+    const val USER = "ROLE_USER"
+    const val GUEST = "ROLE_GUEST"
 }
